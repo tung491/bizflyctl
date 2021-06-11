@@ -18,7 +18,6 @@ package cmd
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
@@ -26,6 +25,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/spf13/cobra"
 
@@ -339,11 +340,16 @@ var getKubeConfig = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		path, _ := os.Getwd()
-		if outputKubeConfigFilePath == "" {
-			outputKubeConfigFilePath = filepath.Join(path, fmt.Sprintf("%s.kubeconfig", args[0]))
-		} else {
-			outputKubeConfigFilePath = filepath.Join(path, outputKubeConfigFilePath)
+		currentDir, _ := os.Getwd()
+
+		defaultFileName := fmt.Sprintf("%s.kubeconfig", args[0])
+
+		stat, err := os.Stat(outputKubeConfigFilePath)
+		if err == nil && stat.IsDir() {
+			outputKubeConfigFilePath = filepath.Join(outputKubeConfigFilePath, defaultFileName)
+		} else if !filepath.IsAbs(outputKubeConfigFilePath) {
+			// input path is relative file path
+			outputKubeConfigFilePath = filepath.Join(currentDir, outputKubeConfigFilePath)
 		}
 
 		file, _ := os.Create(outputKubeConfigFilePath)
