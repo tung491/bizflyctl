@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/bizflycloud/bizflyctl/formatter"
 	"github.com/bizflycloud/gobizfly"
@@ -31,10 +30,6 @@ var (
 	zonesHeader         = []string{"ID", "Name", "Deleted", "NameServer", "TTL", "Active", "Created At", "Update At"}
 	recordSetHeader     = []string{"ID", "Name", "Type", "TTL"}
 )
-
-type recordPayload struct {
-	Record interface{} `json:"record"`
-}
 
 var dnsComnmand = &cobra.Command{
 	Use:   "dns",
@@ -207,7 +202,7 @@ Type arguments:
 			if len(data) == 0 {
 				log.Fatal("Invalid argument")
 			}
-			payloadData := gobizfly.CreateNormalRecordPayload{
+			payload := gobizfly.CreateNormalRecordPayload{
 				BaseCreateRecordPayload: gobizfly.BaseCreateRecordPayload{
 					Name: recordName,
 					Type: recordType,
@@ -215,12 +210,6 @@ Type arguments:
 				},
 				Data: data,
 			}
-			payload := recordPayload{
-				Record: payloadData,
-			}
-			fmt.Printf("%+v\n", payload)
-			json_data, _ := json.Marshal(payload)
-			fmt.Println(string(json_data))
 			recordSet, err := client.DNS.CreateRecord(ctx, zoneID, payload)
 			if err != nil {
 				log.Fatal(err)
@@ -249,7 +238,7 @@ Type arguments:
 				tcpHealthCheckData := parseTCPHealthCheck(tcpHealthCheck)
 				HealthCheckPayload.TCPConnect = tcpHealthCheckData
 			}
-			payloadData := gobizfly.CreatePolicyRecordPayload{
+			payload := gobizfly.CreatePolicyRecordPayload{
 				BaseCreateRecordPayload: gobizfly.BaseCreateRecordPayload{
 					Name: recordName,
 					Type: recordType,
@@ -263,11 +252,6 @@ Type arguments:
 					HealthCheck: HealthCheckPayload,
 				},
 			}
-			payload := recordPayload{
-				Record: payloadData,
-			}
-			json_data, _ := json.Marshal(payload)
-			fmt.Println(string(json_data))
 
 			recordSet, err := client.DNS.CreateRecord(ctx, zoneID, payload)
 			if err != nil {
@@ -284,16 +268,13 @@ Type arguments:
 			outputRecordData(recordSet)
 		} else if recordType == "MX" {
 			mxData := parseMXRecord(domainData)
-			payloadData := gobizfly.CreateMXRecordPayload{
+			payload := gobizfly.CreateMXRecordPayload{
 				BaseCreateRecordPayload: gobizfly.BaseCreateRecordPayload{
 					Name: recordName,
 					TTL:  TTL,
 					Type: recordType,
 				},
 				Data: mxData,
-			}
-			payload := recordPayload{
-				Record: payloadData,
 			}
 			recordSet, err := client.DNS.CreateRecord(ctx, zoneID, payload)
 			if err != nil {
